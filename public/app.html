@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadGen Maps — App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@700;800;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* zinc neutral darks — lime pops against neutral, pas contre du vert-teinté */
+      --bg: #09090b;          /* zinc-950 */
+      --surface: #18181b;     /* zinc-900 */
+      --surface2: #1c1c1f;    /* zinc-900 lighter */
+      --border: #27272a;      /* zinc-800 — visible sans agressivité */
+      --border2: #3f3f46;     /* zinc-700 — plus prononcé */
+      --accent: #a3e635;      /* lime-400 — electric, haut contraste */
+      --accent-dim: rgba(163,230,53,0.10);
+      --accent-glow: rgba(163,230,53,0.16);
+      --accent2: #4ade80;     /* green-400 — secondaire */
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #fafafa;        /* zinc-50 */
+      --muted: #a1a1aa;       /* zinc-400 */
+      --muted2: #71717a;      /* zinc-500 */
+      --card: #18181b;
+      --radius: 8px;
+      --sidebar: 248px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.5}
+    .app{display:flex;min-height:100vh}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+    .sidebar-logo{padding:18px 16px 15px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);flex-shrink:0;text-decoration:none}
+    .logo-icon{width:30px;height:30px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+    .logo-text{font-family:'Geologica',sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text)}
+    .logo-text span{color:var(--accent)}
+    .sidebar-nav{padding:12px 10px;flex:1}
+    .nav-section-label{font-size:10px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;padding:0 8px;margin-bottom:4px;margin-top:16px}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13.5px;color:var(--muted);transition:all 0.12s;border:none;border-left:2px solid transparent;background:none;width:100%;text-align:left;font-family:'Outfit',sans-serif;font-weight:500}
+    .nav-item:hover{background:var(--accent-dim);color:var(--text)}
+    .nav-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600;border-left-color:var(--accent)}
+    .nav-item .nav-icon{font-size:15px;flex-shrink:0;width:18px;text-align:center;display:flex;align-items:center;justify-content:center}
+    .nav-item .nav-badge{margin-left:auto;background:var(--surface2);color:var(--muted2);font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:10px;border:1px solid var(--border)}
+    .nav-item.active .nav-badge{background:var(--accent-dim);color:var(--accent);border-color:rgba(163,230,53,0.25)}
+    .btn-new-list{width:calc(100% - 20px);margin:0 10px 14px;padding:8px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--muted);font-size:12.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;font-family:'Outfit',sans-serif}
+    .btn-new-list:hover{border-color:rgba(163,230,53,0.35);color:var(--accent);background:var(--accent-dim)}
+    .sidebar-user{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0}
+    .user-avatar{width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden}
+    .user-avatar img{width:100%;height:100%;object-fit:cover}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:5px;border-radius:5px;display:flex;align-items:center;transition:color 0.12s}
+    .logout-btn:hover{color:var(--red)}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .main-header{padding:20px 28px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:12px}
+    .page-title{font-family:'Geologica',sans-serif;font-size:20px;font-weight:800;letter-spacing:-0.4px}
+    .page-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+    .main-content{padding:24px 28px;flex:1}
+
+    /* ── BUTTONS ── */
+    .btn{padding:8px 16px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+    /* Lime primary: fond lime + texte dark = contraste maximal + identité */
+    .btn-primary{background:var(--accent);color:#09090b;font-weight:700;box-shadow:0 2px 12px rgba(163,230,53,0.2)}
+    .btn-primary:hover:not(:disabled){background:#b8f040;box-shadow:0 4px 20px rgba(163,230,53,0.32);transform:translateY(-1px)}
+    .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2)}
+    .btn-ghost:hover{color:var(--text);border-color:rgba(163,230,53,0.4)}
+    .btn-green{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+    .btn-green:hover{background:rgba(34,197,94,0.18)}
+    .btn-green:disabled{opacity:0.4;cursor:not-allowed}
+    .btn-red{background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+    .btn-red:hover{background:rgba(239,68,68,0.16)}
+    .btn-sm{padding:6px 13px;font-size:12.5px}
+    .btn-xs{padding:4px 9px;font-size:12px;border-radius:5px}
+
+    /* ── SEARCH SECTION ── */
+    .search-section{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:20px;margin-bottom:20px}
+    .search-row{display:flex;gap:10px;align-items:stretch}
+    .search-input-wrap{flex:1;position:relative}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:15px;pointer-events:none;display:flex;align-items:center}
+    #searchInput{width:100%;padding:11px 12px 11px 38px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;transition:border-color 0.15s,box-shadow 0.15s;outline:none}
+    #searchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    #searchInput::placeholder{color:var(--muted2)}
+    .examples{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+    .examples label{font-size:11px;color:var(--muted2);margin-right:2px;align-self:center;font-family:'JetBrains Mono',monospace}
+    .example-chip{padding:3px 10px;border-radius:20px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.12s;font-family:'JetBrains Mono',monospace}
+    .example-chip:hover{background:var(--accent-dim);border-color:rgba(163,230,53,0.35);color:var(--accent)}
+
+    /* ── FILTERS BAR ── */
+    .filters-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+    .filter-chip{padding:4px 12px;border-radius:20px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:11.5px;cursor:pointer;transition:all 0.12s;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+    .filter-chip:hover{border-color:rgba(163,230,53,0.35);color:var(--text)}
+    .filter-chip.active{background:var(--accent-dim);border-color:rgba(163,230,53,0.4);color:var(--accent)}
+    .filter-search{padding:5px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:20px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;width:190px;transition:border-color 0.15s}
+    .filter-search:focus{border-color:var(--accent)}
+    .filter-search::placeholder{color:var(--muted2)}
+    .filter-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0}
+
+    /* ── LOADER ── */
+    #loader{display:none;flex-direction:column;align-items:center;gap:20px;padding:60px 20px;text-align:center}
+    #loader.active{display:flex}
+    .spinner-wrap{position:relative;width:56px;height:56px}
+    .spinner{width:56px;height:56px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+    .spinner-inner{position:absolute;top:9px;left:9px;width:38px;height:38px;border:2px solid transparent;border-top-color:rgba(163,230,53,0.35);border-radius:50%;animation:spin 1.3s linear infinite reverse}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .progress-bar-wrap{width:300px;max-width:100%;height:2px;background:var(--border2);border-radius:1px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:var(--accent);border-radius:1px;animation:progress-indeterminate 1.6s ease-in-out infinite}
+    @keyframes progress-indeterminate{0%{transform:translateX(-100%) scaleX(0.5)}50%{transform:translateX(0%) scaleX(0.8)}100%{transform:translateX(100%) scaleX(0.5)}}
+
+    /* ── ERROR ── */
+    .error-box{display:none;padding:14px 18px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius);color:#fca5a5;font-size:14px;margin-bottom:18px;gap:10px;align-items:flex-start}
+    .error-box.active{display:flex}
+
+    /* ── STATS BAR ── */
+    .stats-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .stat-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;font-size:12px;color:var(--muted)}
+    .stat-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.5s infinite}
+    .stat-pill .dot.idle{background:var(--muted2);animation:none}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}
+    .stat-count{font-family:'JetBrains Mono',monospace;color:var(--text);font-weight:500;font-size:12px}
+    .actions-right{margin-left:auto;display:flex;gap:6px}
+
+    /* ── TABLE ── */
+    .table-container{border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead{background:var(--surface2)}
+    th{padding:9px 14px;text-align:left;font-weight:500;color:var(--muted2);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.7px;text-transform:uppercase;border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none}
+    th:hover{color:var(--muted)}
+    th.sorted{color:var(--accent)}
+    /* Design system: --table-row-height: 36px */
+    tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(163,230,53,0.03)}
+    td{padding:9px 14px;vertical-align:middle;max-width:200px}
+    td.td-name{font-weight:600;color:var(--text)}
+    td.td-addr{color:var(--muted);font-size:12px}
+    .phone-link,.site-link,.maps-link{text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:12px;transition:color 0.12s}
+    .phone-link{color:var(--green)}
+    .phone-link:hover{color:#4ade80}
+    .site-link{color:#60a5fa;word-break:break-all}
+    .site-link:hover{color:#93c5fd}
+    .maps-link{display:inline-flex;align-items:center;gap:4px;color:var(--muted);padding:3px 8px;border:1px solid var(--border2);border-radius:5px;font-size:11px;transition:all 0.12s}
+    .maps-link:hover{border-color:rgba(163,230,53,0.35);color:var(--accent)}
+    .stars{display:flex;align-items:center;gap:4px}
+    .star-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);font-weight:500}
+    .star-count{font-size:11px;color:var(--muted2)}
+    .no-data{color:var(--muted2);font-size:12px;font-family:'JetBrains Mono',monospace}
+    .empty-state{text-align:center;padding:52px 20px;color:var(--muted)}
+    .empty-icon{font-size:40px;margin-bottom:14px;opacity:0.5}
+    .empty-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px}
+    .empty-sub{font-size:13px;color:var(--muted)}
+
+    /* ── DASHBOARD ── */
+    .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+    .dash-card{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden}
+    /* Ligne lime en haut comme signature de la DA */
+    .dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(163,230,53,0.15))}
+    .dash-card-num{font-family:'Geologica',sans-serif;font-size:34px;font-weight:900;color:var(--accent);letter-spacing:-1.5px;line-height:1}
+    .dash-card-label{font-size:12px;color:var(--muted);margin-top:6px;font-weight:400}
+    .lists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+    .list-card{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:18px;cursor:pointer;transition:all 0.15s;position:relative}
+    .list-card:hover{border-color:rgba(163,230,53,0.3);box-shadow:0 0 0 1px rgba(163,230,53,0.06);transform:translateY(-2px)}
+    .list-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+    .list-card-icon{font-size:18px;color:var(--muted2);display:flex;align-items:center}
+    .list-card-menu{background:none;border:none;color:var(--muted2);cursor:pointer;padding:3px;border-radius:5px;display:flex;align-items:center;transition:color 0.12s;opacity:0}
+    .list-card:hover .list-card-menu{opacity:1}
+    .list-card-menu:hover{color:var(--red)}
+    .list-card-name{font-weight:700;font-size:14px;margin-bottom:4px;letter-spacing:-0.1px}
+    .list-card-meta{font-size:11.5px;color:var(--muted)}
+    .list-card-count{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--accent-dim);border:1px solid rgba(163,230,53,0.2);border-radius:10px;font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-top:10px}
+
+    /* ── STATUS ── */
+    .status-select{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;outline:none;max-width:145px;transition:border-color 0.12s}
+    .status-select:focus{border-color:var(--accent)}
+
+    /* ── LEAD ACTIONS ── */
+    .lead-actions{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+    .action-btn{padding:4px 7px;border:1px solid var(--border2);background:var(--bg);color:var(--muted2);border-radius:5px;cursor:pointer;transition:all 0.12s;text-decoration:none;display:inline-flex;align-items:center}
+    .action-btn:hover{border-color:rgba(163,230,53,0.35);color:var(--accent)}
+    .action-btn.call:hover{border-color:rgba(34,197,94,0.35);color:var(--green)}
+    .action-btn.rdv-set{border-color:rgba(245,158,11,0.4);color:var(--amber);background:rgba(245,158,11,0.07)}
+    .action-btn.rdv-set:hover{background:rgba(245,158,11,0.14)}
+    .action-btn.danger:hover{border-color:rgba(239,68,68,0.35);color:var(--red)}
+
+    /* ── NOTES INLINE ── */
+    .notes-cell{max-width:220px}
+    .notes-text{font-size:12px;color:var(--muted);font-style:italic;cursor:pointer;padding:3px 6px;border-radius:5px;transition:background 0.12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block}
+    .notes-text:hover{background:var(--accent-dim);color:var(--text)}
+    .notes-textarea{width:100%;min-width:180px;padding:6px 8px;background:var(--bg);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;resize:vertical;min-height:60px;outline:none;box-shadow:0 0 0 2px var(--accent-glow)}
+
+    /* ── RDV BADGE ── */
+    .rdv-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px;font-size:11px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+    .rdv-badge.upcoming{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.25)}
+    .rdv-badge.past{background:rgba(113,113,122,0.1);color:var(--muted2);border:1px solid var(--border2)}
+    .rdv-badge.today{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+
+    /* ── PLANNING / CALENDAR ── */
+    .calendar-wrap{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+    .calendar-grid{background:var(--surface);border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+    .cal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+    .cal-month{font-family:'Geologica',sans-serif;font-size:17px;font-weight:800;letter-spacing:-0.3px}
+    .cal-nav{background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;width:30px;height:30px;border-radius:6px;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.12s}
+    .cal-nav:hover{border-color:rgba(163,230,53,0.35);color:var(--accent)}
+    .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+    .cal-day-label{padding:9px;text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px}
+    .cal-days{display:grid;grid-template-columns:repeat(7,1fr)}
+    .cal-day{min-height:76px;padding:7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;position:relative}
+    .cal-day:hover{background:rgba(163,230,53,0.03)}
+    .cal-day.other-month{opacity:0.3}
+    .cal-day.today .cal-day-num{background:var(--accent);color:#09090b;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .cal-day.has-rdv{background:rgba(163,230,53,0.03)}
+    .cal-day-num{font-size:12px;font-weight:600;margin-bottom:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+    .cal-event{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .cal-event:hover{opacity:0.8}
+
+    /* Planning sidebar */
+    .planning-sidebar{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:18px}
+    .planning-sidebar-title{font-family:'Geologica',sans-serif;font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:-0.2px}
+    .rdv-item{padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;margin-bottom:8px;cursor:pointer;transition:border-color 0.12s}
+    .rdv-item:hover{border-color:rgba(163,230,53,0.3)}
+    .rdv-item-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:4px}
+    .rdv-item-name{font-size:13.5px;font-weight:600;margin-bottom:2px}
+    .rdv-item-list{font-size:11px;color:var(--muted)}
+    .rdv-item-phone{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);margin-top:4px}
+    .rdv-today-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:10px;font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-left:6px}
+
+    /* ── STATUSES PAGE ── */
+    .status-list-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;margin-bottom:6px;transition:border-color 0.12s}
+    .status-list-item:hover{border-color:var(--border2)}
+    .status-list-color{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+    .status-list-name{flex:1;font-size:13px;font-weight:500}
+    .status-list-badge{font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--border);padding:2px 6px;border-radius:4px}
+    .status-delete-btn{background:none;border:none;color:var(--muted2);cursor:pointer;padding:3px;border-radius:4px;font-size:12px;transition:color 0.12s;display:flex;align-items:center}
+    .status-delete-btn:hover{color:var(--red)}
+
+    /* ── MODAL ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:26px;width:100%;max-width:420px;position:relative}
+    .modal::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:140px;height:1px;background:linear-gradient(90deg,transparent,rgba(163,230,53,0.3),transparent)}
+    .modal-title{font-family:'Geologica',sans-serif;font-size:17px;font-weight:800;margin-bottom:4px;letter-spacing:-0.3px}
+    .modal-sub{font-size:12.5px;color:var(--muted);margin-bottom:20px}
+    .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:10.5px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+    .field input,.field select,.field textarea{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.12s,box-shadow 0.12s}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .field input::placeholder,.field textarea::placeholder{color:var(--muted2)}
+    .field input[type=color]{padding:3px;height:38px;cursor:pointer}
+    .field textarea{resize:vertical;min-height:80px}
+
+    /* ── TOAST ── */
+    #copyToast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:9px 16px;font-size:13px;color:var(--accent);z-index:999;opacity:0;transition:all 0.22s ease;pointer-events:none;font-family:'Outfit',sans-serif;font-weight:500}
+    #copyToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    #searchResultsSection{display:none}
+    #searchResultsSection.active{display:block}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="/dashboard" style="text-decoration:none">
+      <div class="logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(163,230,53,0.15)" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9" r="2.5" fill="currentColor"/></svg>
+      </div>
+      <span class="logo-text">Lead<span>Gen</span></span>
+    </a>
+    <div class="sidebar-nav">
+      <button class="nav-item" id="navDashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+        Dashboard
+      </button>
+      <button class="nav-item" id="navSearch" onclick="showPage('search')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+        Nouvelle recherche
+      </button>
+      <button class="nav-item" id="navPlanning" onclick="showPage('planning')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        Planning RDV
+        <span class="nav-badge" id="rdvBadge" style="display:none"></span>
+      </button>
+      <button class="nav-item" id="navStatuses" onclick="showPage('statuses')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+        Statuts
+      </button>
+      <div class="nav-section-label">Mes listes</div>
+      <div id="sidebarLists"></div>
+    </div>
+    <button class="btn-new-list" onclick="openNewListModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouvelle liste vide
+    </button>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">...</div>
+        <div class="user-email" id="userEmail">...</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Se déconnecter">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="pageDashboard" style="display:none">
+      <div class="main-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Vue d'ensemble de votre prospection</div></div>
+      </div>
+      <div class="main-content">
+        <div class="dashboard-grid" id="dashboardCards"></div>
+        <div style="font-family:'Geologica',sans-serif;font-weight:800;font-size:15px;letter-spacing:-0.2px;margin-bottom:12px">Listes récentes</div>
+        <div class="lists-grid" id="dashboardLists"></div>
+      </div>
+    </div>
+
+    <!-- ══ SEARCH ══ -->
+    <div id="pageSearch" style="display:none">
+      <div class="main-header">
+        <div><div class="page-title">Nouvelle recherche</div><div class="page-sub">Trouvez des entreprises via Google Places</div></div>
+      </div>
+      <div class="main-content">
+        <div class="search-section">
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+              <input type="text" id="searchInput" placeholder="Ex: plombier Auxerre, électricien Lyon..." autocomplete="off" />
+            </div>
+            <button class="btn btn-primary" id="searchBtn" onclick="startSearch()">
+              <span id="btnIcon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span id="btnText">Rechercher</span>
+            </button>
+          </div>
+          <div class="examples">
+            <label>Exemples:</label>
+            <span class="example-chip" onclick="setExample('plombier Auxerre')">plombier Auxerre</span>
+            <span class="example-chip" onclick="setExample('électricien Lyon')">électricien Lyon</span>
+            <span class="example-chip" onclick="setExample('restaurant Bordeaux')">restaurant Bordeaux</span>
+            <span class="example-chip" onclick="setExample('dentiste Nantes')">dentiste Nantes</span>
+            <span class="example-chip" onclick="setExample('garage auto Toulouse')">garage Toulouse</span>
+          </div>
+        </div>
+        <div id="errorBox" class="error-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div id="errorText"></div></div>
+        <div id="loader">
+          <div class="spinner-wrap"><div class="spinner"></div><div class="spinner-inner"></div></div>
+          <div style="font-size:14px;color:var(--muted)">Collecte des données en cours...</div>
+          <div id="loaderStatus" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent)">Génération des variantes...</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+        </div>
+        <div id="searchResultsSection">
+          <div class="stats-bar">
+            <div class="stat-pill"><div class="dot idle" id="statusDot"></div><span id="statusText">Prêt</span></div>
+            <div class="stat-pill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg> <span class="stat-count" id="resultCount">0</span>&nbsp;résultats</div>
+            <div class="stat-pill" id="queryPill" style="display:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> <span id="queryLabel" style="font-family:'JetBrains Mono',monospace;font-size:11px"></span></div>
+            <div class="actions-right">
+              <button class="btn btn-primary btn-sm" id="saveListBtn" onclick="openSaveListModal()" disabled>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Créer une liste
+              </button>
+              <button class="btn btn-green btn-sm" id="exportBtn" onclick="exportCSV()" disabled>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="resultsTable">
+              <thead><tr><th>#</th><th>Entreprise</th><th>Adresse</th><th>Téléphone</th><th>Site web</th><th>Note</th><th>Maps</th></tr></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LIST ══ -->
+    <div id="pageList" style="display:none">
+      <div class="main-header">
+        <div>
+          <div class="page-title" id="listPageTitle">Liste</div>
+          <div class="page-sub" id="listPageSub"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green btn-sm" onclick="exportListCSV()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV
+          </button>
+          <button class="btn btn-red btn-sm" onclick="confirmDeleteList()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Supprimer
+          </button>
+        </div>
+      </div>
+      <div class="main-content">
+        <div id="listLoader" style="display:none;text-align:center;padding:60px;color:var(--muted)">Chargement...</div>
+        <div id="listContent">
+          <!-- Filters -->
+          <div class="filters-bar" id="filtersBar">
+            <input class="filter-search" id="filterSearch" placeholder="🔍 Rechercher..." oninput="applyFilters()" />
+            <div class="filter-sep"></div>
+            <button class="filter-chip" id="f-no-website" onclick="toggleFilter('no-website')">Sans site web</button>
+            <button class="filter-chip" id="f-no-phone" onclick="toggleFilter('no-phone')">Sans téléphone</button>
+            <button class="filter-chip" id="f-has-phone" onclick="toggleFilter('has-phone')">Avec téléphone</button>
+            <button class="filter-chip" id="f-low-rating" onclick="toggleFilter('low-rating')">Note basse (&lt;3)</button>
+            <button class="filter-chip" id="f-high-rating" onclick="toggleFilter('high-rating')">Note haute (&gt;4)</button>
+            <button class="filter-chip" id="f-no-status" onclick="toggleFilter('no-status')">Sans statut</button>
+            <button class="filter-chip" id="f-has-rdv" onclick="toggleFilter('has-rdv')">Avec RDV</button>
+            <button class="filter-chip" style="color:var(--red);border-color:rgba(239,68,68,0.3)" onclick="clearFilters()">✕ Réinitialiser</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+            <span id="filteredCount"></span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortLeads('index')">#</th>
+                  <th onclick="sortLeads('name')">Entreprise</th>
+                  <th onclick="sortLeads('phone')">Téléphone</th>
+                  <th onclick="sortLeads('website')">Site</th>
+                  <th onclick="sortLeads('rating')">Note ↕</th>
+                  <th>Adresse</th>
+                  <th>Notes</th>
+                  <th>RDV</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="listTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PLANNING ══ -->
+    <div id="pagePlanning" style="display:none">
+      <div class="main-header">
+        <div><div class="page-title">Planning RDV</div><div class="page-sub">Vos rendez-vous et rappels</div></div>
+      </div>
+      <div class="main-content">
+        <div class="calendar-wrap">
+          <div class="calendar-grid">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="calPrev()">‹</button>
+              <div class="cal-month" id="calMonthLabel"></div>
+              <button class="cal-nav" onclick="calNext()">›</button>
+            </div>
+            <div class="cal-days-header">
+              <div class="cal-day-label">Lun</div><div class="cal-day-label">Mar</div>
+              <div class="cal-day-label">Mer</div><div class="cal-day-label">Jeu</div>
+              <div class="cal-day-label">Ven</div><div class="cal-day-label">Sam</div>
+              <div class="cal-day-label">Dim</div>
+            </div>
+            <div class="cal-days" id="calDays"></div>
+          </div>
+          <div class="planning-sidebar">
+            <div class="planning-sidebar-title">
+              📋 Prochains RDV
+              <span id="todayRdvBadge" class="rdv-today-badge" style="display:none">Aujourd'hui</span>
+            </div>
+            <div id="upcomingRdvList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STATUSES ══ -->
+    <div id="pageStatuses" style="display:none">
+      <div class="main-header">
+        <div><div class="page-title">Statuts</div><div class="page-sub">Personnalisez les statuts de vos leads</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openNewStatusModal()">+ Nouveau statut</button>
+      </div>
+      <div class="main-content">
+        <div id="statusesList" style="max-width:500px"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODAL: Save list ══ -->
+<div class="modal-overlay" id="modalSaveList">
+  <div class="modal">
+    <div class="modal-title">Créer une liste</div>
+    <div class="modal-sub">Enregistrez les résultats dans une nouvelle liste</div>
+    <div class="field"><label>Nom de la liste</label><input type="text" id="newListName" placeholder="Ex: Plombiers Auxerre" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalSaveList')">Annuler</button>
+      <button class="btn btn-primary" id="saveListConfirm" onclick="saveList()">💾 Créer la liste</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: New empty list ══ -->
+<div class="modal-overlay" id="modalNewList">
+  <div class="modal">
+    <div class="modal-title">Nouvelle liste</div>
+    <div class="modal-sub">Créer une liste vide</div>
+    <div class="field"><label>Nom de la liste</label><input type="text" id="emptyListName" placeholder="Ex: Prospects Paris" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewList')">Annuler</button>
+      <button class="btn btn-primary" onclick="createEmptyList()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: New status ══ -->
+<div class="modal-overlay" id="modalNewStatus">
+  <div class="modal">
+    <div class="modal-title">Nouveau statut</div>
+    <div class="modal-sub">Créez un statut personnalisé</div>
+    <div class="field"><label>Nom du statut</label><input type="text" id="newStatusName" placeholder="Ex: Acheteur possible" /></div>
+    <div class="field"><label>Couleur</label><input type="color" id="newStatusColor" value="#a3e635" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewStatus')">Annuler</button>
+      <button class="btn btn-primary" onclick="createStatus()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: RDV ══ -->
+<div class="modal-overlay" id="modalRdv">
+  <div class="modal">
+    <div class="modal-title">📅 Planifier un RDV</div>
+    <div class="modal-sub" id="modalRdvLeadName"></div>
+    <div class="field">
+      <label>Date et heure du RDV</label>
+      <input type="datetime-local" id="rdvDateInput" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-red btn-sm" id="rdvDeleteBtn" onclick="deleteRdv()" style="margin-right:auto">Supprimer le RDV</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalRdv')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveRdv()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Notes ══ -->
+<div class="modal-overlay" id="modalNotes">
+  <div class="modal">
+    <div class="modal-title">📝 Notes</div>
+    <div class="modal-sub" id="modalNotesLeadName"></div>
+    <div class="field">
+      <label>Notes libres</label>
+      <textarea id="notesInput" placeholder="Ex: Rappeler après 14h, patron disponible en semaine..." rows="5"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNotes')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveNotes()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="copyToast">✅ Copié !</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let currentUser = null;
+let allLists = [];
+let allStatuses = [];
+let allRdvLeads = [];
+let currentListId = null;
+let currentListLeads = [];
+let filteredLeads = [];
+let activeFilters = new Set();
+let sortField = null;
+let sortDir = 1;
+let currentSearchResults = [];
+let currentSearchQuery = '';
+let editingLeadId = null;
+
+// Calendar state
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+// ════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════
+(async () => {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!r.ok) return window.location.href = '/auth';
+    const data = await r.json();
+    currentUser = data.user;
+    initUser();
+    await Promise.all([loadLists(), loadStatuses(), loadRdvLeads()]);
+    const path = window.location.pathname;
+    if (path.startsWith('/list/')) openList(path.split('/list/')[1]);
+    else showPage('dashboard');
+  } catch { window.location.href = '/auth'; }
+})();
+
+function initUser() {
+  document.getElementById('userName').textContent = currentUser.name || currentUser.email.split('@')[0];
+  document.getElementById('userEmail').textContent = currentUser.email;
+  const el = document.getElementById('userAvatar');
+  if (currentUser.avatar) el.innerHTML = `<img src="${currentUser.avatar}" alt="">`;
+  else el.textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+}
+
+// ════════════════════════════════════════════════════
+// PAGE ROUTING
+// ════════════════════════════════════════════════════
+function showPage(page, listId) {
+  ['pageDashboard','pageSearch','pageList','pagePlanning','pageStatuses']
+    .forEach(p => document.getElementById(p).style.display = 'none');
+  ['navDashboard','navSearch','navPlanning','navStatuses']
+    .forEach(n => document.getElementById(n)?.classList.remove('active'));
+  document.querySelectorAll('.sidebar-list-item').forEach(el => el.classList.remove('active'));
+
+  if (page === 'dashboard') {
+    document.getElementById('pageDashboard').style.display = 'block';
+    document.getElementById('navDashboard').classList.add('active');
+    renderDashboard();
+  } else if (page === 'search') {
+    document.getElementById('pageSearch').style.display = 'block';
+    document.getElementById('navSearch').classList.add('active');
+  } else if (page === 'list') {
+    document.getElementById('pageList').style.display = 'block';
+    openList(listId);
+    document.getElementById(`sli-${listId}`)?.classList.add('active');
+  } else if (page === 'planning') {
+    document.getElementById('pagePlanning').style.display = 'block';
+    document.getElementById('navPlanning').classList.add('active');
+    renderCalendar();
+    renderUpcomingRdv();
+  } else if (page === 'statuses') {
+    document.getElementById('pageStatuses').style.display = 'block';
+    document.getElementById('navStatuses').classList.add('active');
+    renderStatusesPage();
+  }
+}
+
+// ════════════════════════════════════════════════════
+// LISTS
+// ════════════════════════════════════════════════════
+async function loadLists() {
+  const r = await fetch('/api/lists', { credentials: 'include' });
+  if (!r.ok) return;
+  const data = await r.json();
+  allLists = data.lists || [];
+  renderSidebarLists();
+}
+
+function renderSidebarLists() {
+  const c = document.getElementById('sidebarLists');
+  if (!allLists.length) {
+    c.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 10px;font-style:italic">Aucune liste</div>';
+    return;
+  }
+  c.innerHTML = allLists.map(l => `
+    <button class="nav-item sidebar-list-item" id="sli-${l._id}" onclick="showPage('list','${l._id}')">
+      <span class="nav-icon">📋</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.name)}</span>
+      <span class="nav-badge">${l.leadCount||0}</span>
+    </button>
+  `).join('');
+}
+
+async function saveList() {
+  const name = document.getElementById('newListName').value.trim();
+  if (!name) return;
+  const btn = document.getElementById('saveListConfirm');
+  btn.disabled = true; btn.textContent = 'Sauvegarde...';
+  try {
+    const r = await fetch('/api/lists', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, query: currentSearchQuery, leads: currentSearchResults }),
+    });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    allLists.unshift(data.list);
+    renderSidebarLists();
+    closeModal('modalSaveList');
+    showPage('list', data.list._id);
+  } catch { alert('Erreur lors de la création'); }
+  finally { btn.disabled = false; btn.textContent = '💾 Créer la liste'; }
+}
+
+async function createEmptyList() {
+  const name = document.getElementById('emptyListName').value.trim();
+  if (!name) return;
+  const r = await fetch('/api/lists', {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  allLists.unshift(data.list);
+  renderSidebarLists();
+  closeModal('modalNewList');
+  showPage('list', data.list._id);
+}
+
+async function deleteList(listId) {
+  const r = await fetch(`/api/lists/${listId}`, { method:'DELETE', credentials:'include' });
+  if (!r.ok) return;
+  allLists = allLists.filter(l => l._id !== listId);
+  renderSidebarLists();
+  showPage('dashboard');
+}
+
+function confirmDeleteList() {
+  const list = allLists.find(l => l._id === currentListId);
+  if (confirm(`Supprimer la liste "${list?.name}" et tous ses leads ?`)) deleteList(currentListId);
+}
+
+// ════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════
+function renderDashboard() {
+  const totalLeads = allLists.reduce((s, l) => s + (l.leadCount||0), 0);
+  const todayRdv = allRdvLeads.filter(l => {
+    const d = new Date(l.rdvDate); const n = new Date();
+    return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear();
+  }).length;
+  document.getElementById('dashboardCards').innerHTML = `
+    <div class="dash-card"><div class="dash-card-num">${allLists.length}</div><div class="dash-card-label">Listes de prospects</div></div>
+    <div class="dash-card"><div class="dash-card-num">${totalLeads}</div><div class="dash-card-label">Leads enregistrés</div></div>
+    <div class="dash-card"><div class="dash-card-num">${allRdvLeads.length}</div><div class="dash-card-label">RDV planifiés</div></div>
+    <div class="dash-card"><div class="dash-card-num" style="color:var(--green)">${todayRdv}</div><div class="dash-card-label">RDV aujourd'hui</div></div>
+  `;
+  if (!allLists.length) {
+    document.getElementById('dashboardLists').innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucune liste</div><div class="empty-sub">Faites une recherche pour commencer</div></div>`;
+    return;
+  }
+  document.getElementById('dashboardLists').innerHTML = allLists.slice(0,8).map(l => `
+    <div class="list-card" onclick="showPage('list','${l._id}')">
+      <div class="list-card-header">
+        <div class="list-card-icon">📋</div>
+        <button class="list-card-menu" onclick="event.stopPropagation();deleteList('${l._id}')" title="Supprimer">🗑</button>
+      </div>
+      <div class="list-card-name">${esc(l.name)}</div>
+      <div class="list-card-meta">${new Date(l.createdAt).toLocaleDateString('fr-FR')}</div>
+      <div class="list-card-count">📍 ${l.leadCount||0} leads</div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════
+// LIST VIEW + FILTERS + SORT
+// ════════════════════════════════════════════════════
+async function openList(listId) {
+  currentListId = listId;
+  activeFilters.clear(); sortField = null; sortDir = 1;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('filterSearch').value = '';
+
+  document.getElementById('pageList').style.display = 'block';
+  document.getElementById('listLoader').style.display = 'block';
+  document.getElementById('listContent').style.display = 'none';
+
+  document.querySelectorAll('.sidebar-list-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`sli-${listId}`)?.classList.add('active');
+
+  try {
+    const r = await fetch(`/api/leads/${listId}`, { credentials: 'include' });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    currentListLeads = data.leads || [];
+    filteredLeads = [...currentListLeads];
+    const list = data.list;
+    document.getElementById('listPageTitle').textContent = list.name;
+    document.getElementById('listPageSub').textContent = `${currentListLeads.length} leads · créée le ${new Date(list.createdAt).toLocaleDateString('fr-FR')}`;
+    renderListTable();
+  } catch {
+    document.getElementById('listTableBody').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:40px">Erreur de chargement</td></tr>';
+  } finally {
+    document.getElementById('listLoader').style.display = 'none';
+    document.getElementById('listContent').style.display = 'block';
+  }
+}
+
+function applyFilters() {
+  const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+  filteredLeads = currentListLeads.filter(lead => {
+    if (search && !lead.name.toLowerCase().includes(search) && !lead.address.toLowerCase().includes(search) && !lead.phone.toLowerCase().includes(search)) return false;
+    if (activeFilters.has('no-website') && lead.website) return false;
+    if (activeFilters.has('no-phone') && lead.phone) return false;
+    if (activeFilters.has('has-phone') && !lead.phone) return false;
+    if (activeFilters.has('low-rating') && (lead.rating === null || lead.rating >= 3)) return false;
+    if (activeFilters.has('high-rating') && (lead.rating === null || lead.rating <= 4)) return false;
+    if (activeFilters.has('no-status') && lead.statusId) return false;
+    if (activeFilters.has('has-rdv') && !lead.rdvDate) return false;
+    return true;
+  });
+  if (sortField) doSort(false);
+  renderListTable();
+}
+
+function toggleFilter(key) {
+  if (activeFilters.has(key)) activeFilters.delete(key);
+  else activeFilters.add(key);
+  document.getElementById(`f-${key}`)?.classList.toggle('active', activeFilters.has(key));
+  applyFilters();
+}
+
+function clearFilters() {
+  activeFilters.clear();
+  document.getElementById('filterSearch').value = '';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  filteredLeads = [...currentListLeads];
+  renderListTable();
+}
+
+function sortLeads(field) {
+  if (sortField === field) sortDir *= -1;
+  else { sortField = field; sortDir = 1; }
+  doSort(true);
+  renderListTable();
+}
+
+function doSort(reapply) {
+  if (reapply) filteredLeads = [...filteredLeads];
+  filteredLeads.sort((a, b) => {
+    if (sortField === 'index') return sortDir;
+    if (sortField === 'name') return sortDir * (a.name||'').localeCompare(b.name||'');
+    if (sortField === 'phone') return sortDir * ((a.phone?1:0) - (b.phone?1:0));
+    if (sortField === 'website') return sortDir * ((a.website?1:0) - (b.website?1:0));
+    if (sortField === 'rating') return sortDir * ((a.rating||0) - (b.rating||0));
+    return 0;
+  });
+}
+
+function renderListTable() {
+  const tbody = document.getElementById('listTableBody');
+  const count = document.getElementById('filteredCount');
+  count.textContent = filteredLeads.length < currentListLeads.length
+    ? `${filteredLeads.length} / ${currentListLeads.length} leads affichés`
+    : `${currentListLeads.length} leads`;
+
+  if (!filteredLeads.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">${activeFilters.size ? '🔍' : '📋'}</div><div class="empty-title">${activeFilters.size ? 'Aucun lead ne correspond aux filtres' : 'Liste vide'}</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredLeads.map((lead, i) => {
+    const status = lead.statusId;
+    const rowBg = status ? `background:${hexToRgba(status.color, 0.04)};` : '';
+    const borderLeft = status ? `border-left:3px solid ${status.color}` : '';
+    const rdvClass = getRdvClass(lead.rdvDate);
+    const rdvLabel = lead.rdvDate ? formatRdvShort(lead.rdvDate) : '—';
+
+    return `<tr style="${rowBg}${borderLeft}">
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2)">${i+1}</td>
+      <td class="td-name">${esc(lead.name)}</td>
+      <td>${lead.phone ? `<a class="phone-link" href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>` : '<span class="no-data">—</span>'}</td>
+      <td>${lead.website ? `<a class="site-link" href="${esc(lead.website)}" target="_blank" rel="noopener">${shortUrl(lead.website)}</a>` : '<span class="no-data">—</span>'}</td>
+      <td>${lead.rating ? `<div class="stars"><span class="star-val">★ ${lead.rating}</span><span class="star-count">(${lead.reviews})</span></div>` : '<span class="no-data">—</span>'}</td>
+      <td class="td-addr">${esc(lead.address)||'<span class="no-data">—</span>'}</td>
+      <td class="notes-cell">
+        <span class="notes-text" onclick="openNotesModal('${lead._id}')" title="${esc(lead.notes||'')}">
+          ${lead.notes ? esc(lead.notes) : '<span style="color:var(--muted);font-style:italic">Ajouter une note...</span>'}
+        </span>
+      </td>
+      <td>
+        <span class="rdv-badge ${rdvClass}" onclick="openRdvModal('${lead._id}')" style="cursor:pointer" title="Modifier le RDV">
+          ${lead.rdvDate ? '📅 ' + rdvLabel : '<span style="color:var(--muted)">—</span>'}
+        </span>
+      </td>
+      <td>
+        <select class="status-select" onchange="changeLeadStatus('${lead._id}', this.value)" style="border-left:3px solid ${status ? status.color : 'var(--border)'}">
+          <option value="">— Statut —</option>
+          ${allStatuses.map(s => `<option value="${s._id}" ${status&&status._id===s._id?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="lead-actions">
+          ${lead.phone ? `<button class="action-btn call" onclick="copyPhone('${esc(lead.phone)}')" title="Copier">📋</button>` : ''}
+          ${lead.phone ? `<a class="action-btn call" href="tel:${esc(lead.phone)}" title="Appeler">📞</a>` : ''}
+          ${lead.website ? `<a class="action-btn" href="${esc(lead.website)}" target="_blank" rel="noopener" title="Site web">🌐</a>` : ''}
+          ${lead.googleMapsUrl ? `<a class="action-btn" href="${esc(lead.googleMapsUrl)}" target="_blank" rel="noopener" title="Google Maps">📍</a>` : ''}
+          <button class="action-btn ${lead.rdvDate?'rdv-set':''}" onclick="openRdvModal('${lead._id}')" title="RDV">📅</button>
+          <button class="action-btn danger" onclick="deleteLead('${lead._id}')" title="Supprimer">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function getRdvClass(rdvDate) {
+  if (!rdvDate) return '';
+  const d = new Date(rdvDate); const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return 'today';
+  return d > now ? 'upcoming' : 'past';
+}
+
+function formatRdvShort(rdvDate) {
+  const d = new Date(rdvDate);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return `Auj. ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`;
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function changeLeadStatus(leadId, statusId) {
+  const r = await fetch(`/api/leads/${leadId}/status`, {
+    method:'PATCH', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ statusId: statusId || null }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  updateLeadInState(data.lead);
+  renderListTable();
+}
+
+async function deleteLead(leadId) {
+  if (!confirm('Supprimer ce lead ?')) return;
+  const r = await fetch(`/api/leads/${leadId}`, { method:'DELETE', credentials:'include' });
+  if (!r.ok) return;
+  currentListLeads = currentListLeads.filter(l => l._id !== leadId);
+  filteredLeads = filteredLeads.filter(l => l._id !== leadId);
+  const idx = allLists.findIndex(l => l._id === currentListId);
+  if (idx !== -1) allLists[idx].leadCount = Math.max(0, (allLists[idx].leadCount||1) - 1);
+  renderSidebarLists();
+  renderListTable();
+}
+
+function updateLeadInState(updatedLead) {
+  const i = currentListLeads.findIndex(l => l._id === updatedLead._id);
+  if (i !== -1) currentListLeads[i] = updatedLead;
+  const j = filteredLeads.findIndex(l => l._id === updatedLead._id);
+  if (j !== -1) filteredLeads[j] = updatedLead;
+  // Update in RDV leads too
+  const k = allRdvLeads.findIndex(l => l._id === updatedLead._id);
+  if (updatedLead.rdvDate) {
+    if (k !== -1) allRdvLeads[k] = updatedLead;
+    else allRdvLeads.push(updatedLead);
+  } else if (k !== -1) {
+    allRdvLeads.splice(k, 1);
+  }
+  updateRdvBadge();
+}
+
+function exportListCSV() {
+  if (!filteredLeads.length) return;
+  const headers = ['Nom','Téléphone','Site web','Note','Avis','Adresse','Notes','RDV','Statut','Google Maps'];
+  const rows = filteredLeads.map(l => [
+    l.name, l.phone, l.website, l.rating, l.reviews, l.address,
+    l.notes, l.rdvDate ? new Date(l.rdvDate).toLocaleString('fr-FR') : '',
+    l.statusId?.name||'', l.googleMapsUrl
+  ].map(csvCell));
+  downloadCSV([headers.join(';'), ...rows.map(r => r.join(';'))].join('\n'), `leads_${Date.now()}.csv`);
+}
+
+// ════════════════════════════════════════════════════
+// NOTES MODAL
+// ════════════════════════════════════════════════════
+function openNotesModal(leadId) {
+  editingLeadId = leadId;
+  const lead = currentListLeads.find(l => l._id === leadId);
+  document.getElementById('modalNotesLeadName').textContent = lead?.name || '';
+  document.getElementById('notesInput').value = lead?.notes || '';
+  openModal('modalNotes');
+  setTimeout(() => document.getElementById('notesInput').focus(), 50);
+}
+
+async function saveNotes() {
+  const notes = document.getElementById('notesInput').value;
+  const r = await fetch(`/api/leads/${editingLeadId}/notes`, {
+    method:'PATCH', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ notes }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  updateLeadInState(data.lead);
+  closeModal('modalNotes');
+  renderListTable();
+  showToast('✅ Note enregistrée');
+}
+
+// ════════════════════════════════════════════════════
+// RDV MODAL
+// ════════════════════════════════════════════════════
+function openRdvModal(leadId) {
+  editingLeadId = leadId;
+  const lead = currentListLeads.find(l => l._id === leadId) || allRdvLeads.find(l => l._id === leadId);
+  document.getElementById('modalRdvLeadName').textContent = lead?.name || '';
+  const deleteBtn = document.getElementById('rdvDeleteBtn');
+  deleteBtn.style.display = lead?.rdvDate ? 'inline-flex' : 'none';
+  if (lead?.rdvDate) {
+    const d = new Date(lead.rdvDate);
+    const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('rdvDateInput').value = local;
+  } else {
+    const now = new Date();
+    now.setMinutes(0); now.setSeconds(0);
+    now.setHours(now.getHours() + 1);
+    const local = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.getElementById('rdvDateInput').value = local;
+  }
+  openModal('modalRdv');
+}
+
+async function saveRdv() {
+  const rdvDate = document.getElementById('rdvDateInput').value;
+  if (!rdvDate) return;
+  const r = await fetch(`/api/leads/${editingLeadId}/rdv`, {
+    method:'PATCH', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ rdvDate }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  updateLeadInState(data.lead);
+  closeModal('modalRdv');
+  renderListTable();
+  renderCalendar();
+  renderUpcomingRdv();
+  showToast('✅ RDV enregistré');
+}
+
+async function deleteRdv() {
+  const r = await fetch(`/api/leads/${editingLeadId}/rdv`, {
+    method:'PATCH', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ rdvDate: null }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  updateLeadInState(data.lead);
+  closeModal('modalRdv');
+  renderListTable();
+  renderCalendar();
+  renderUpcomingRdv();
+  showToast('🗑 RDV supprimé');
+}
+
+// ════════════════════════════════════════════════════
+// RDV / PLANNING
+// ════════════════════════════════════════════════════
+async function loadRdvLeads() {
+  const r = await fetch('/api/leads/rdv/all', { credentials: 'include' });
+  if (!r.ok) return;
+  const data = await r.json();
+  allRdvLeads = data.leads || [];
+  updateRdvBadge();
+}
+
+function updateRdvBadge() {
+  const now = new Date();
+  const upcoming = allRdvLeads.filter(l => new Date(l.rdvDate) >= now).length;
+  const badge = document.getElementById('rdvBadge');
+  if (upcoming > 0) {
+    badge.style.display = 'block';
+    badge.textContent = upcoming;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderUpcomingRdv() {
+  const container = document.getElementById('upcomingRdvList');
+  const now = new Date();
+  const sorted = [...allRdvLeads].sort((a,b) => new Date(a.rdvDate) - new Date(b.rdvDate));
+  const hasTodayRdv = sorted.some(l => new Date(l.rdvDate).toDateString() === now.toDateString());
+  document.getElementById('todayRdvBadge').style.display = hasTodayRdv ? 'inline-flex' : 'none';
+
+  if (!sorted.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Aucun RDV planifié</div>';
+    return;
+  }
+
+  container.innerHTML = sorted.map(lead => {
+    const d = new Date(lead.rdvDate);
+    const isToday = d.toDateString() === now.toDateString();
+    const isPast = d < now && !isToday;
+    return `
+      <div class="rdv-item" onclick="goToLead('${lead._id}','${lead.listId?._id||lead.listId}')" style="${isPast?'opacity:0.5':''}">
+        <div class="rdv-item-date">
+          ${isToday ? '🟢 Aujourd\'hui · ' : ''}
+          ${d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})} à ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+        </div>
+        <div class="rdv-item-name">${esc(lead.name)}</div>
+        <div class="rdv-item-list">📋 ${esc(lead.listId?.name||'')}</div>
+        ${lead.phone ? `<div class="rdv-item-phone">📞 ${esc(lead.phone)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function goToLead(leadId, listId) {
+  if (!listId) return;
+  showPage('list', listId);
+}
+
+// ════════════════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════════════════
+function renderCalendar() {
+  const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('calMonthLabel').textContent = `${months[calMonth]} ${calYear}`;
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth+1, 0);
+  // Week starts Monday: 0=Mon...6=Sun
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1;
+
+  const days = [];
+  // Prev month padding
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = new Date(calYear, calMonth, -i);
+    days.push({ date: d, otherMonth: true });
+  }
+  // Current month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    days.push({ date: new Date(calYear, calMonth, d), otherMonth: false });
+  }
+  // Next month padding
+  const remaining = 42 - days.length;
+  for (let d = 1; d <= remaining; d++) {
+    days.push({ date: new Date(calYear, calMonth+1, d), otherMonth: true });
+  }
+
+  const today = new Date();
+  const container = document.getElementById('calDays');
+
+  // Build RDV map by day key
+  const rdvMap = {};
+  allRdvLeads.forEach(lead => {
+    const d = new Date(lead.rdvDate);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if (!rdvMap[key]) rdvMap[key] = [];
+    rdvMap[key].push(lead);
+  });
+
+  container.innerHTML = days.map(({ date, otherMonth }) => {
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const rdvs = rdvMap[key] || [];
+    const isToday = date.toDateString() === today.toDateString();
+    const hasRdv = rdvs.length > 0;
+
+    const events = rdvs.slice(0,3).map(lead => {
+      const color = lead.statusId?.color || '#a3e635';
+      return `<div class="cal-event" style="background:${hexToRgba(color,0.25)};color:${color}" 
+        onclick="event.stopPropagation();openRdvFromCal('${lead._id}','${lead.listId?._id||lead.listId}')" 
+        title="${esc(lead.name)}">${esc(lead.name)}</div>`;
+    }).join('');
+    const more = rdvs.length > 3 ? `<div style="font-size:9px;color:var(--muted)">+${rdvs.length-3} autres</div>` : '';
+
+    return `<div class="cal-day${otherMonth?' other-month':''}${isToday?' today':''}${hasRdv?' has-rdv':''}">
+      <div class="cal-day-num">${date.getDate()}</div>
+      ${events}${more}
+    </div>`;
+  }).join('');
+}
+
+function openRdvFromCal(leadId, listId) {
+  editingLeadId = leadId;
+  const lead = allRdvLeads.find(l => l._id === leadId);
+  if (!lead) return;
+  document.getElementById('modalRdvLeadName').textContent = lead.name || '';
+  document.getElementById('rdvDeleteBtn').style.display = 'inline-flex';
+  const d = new Date(lead.rdvDate);
+  const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('rdvDateInput').value = local;
+  openModal('modalRdv');
+}
+
+function calPrev() {
+  if (calMonth === 0) { calMonth = 11; calYear--; } else calMonth--;
+  renderCalendar();
+}
+function calNext() {
+  if (calMonth === 11) { calMonth = 0; calYear++; } else calMonth++;
+  renderCalendar();
+}
+
+// ════════════════════════════════════════════════════
+// STATUSES
+// ════════════════════════════════════════════════════
+async function loadStatuses() {
+  const r = await fetch('/api/statuses', { credentials: 'include' });
+  if (!r.ok) return;
+  const data = await r.json();
+  allStatuses = data.statuses || [];
+}
+
+function renderStatusesPage() {
+  const c = document.getElementById('statusesList');
+  if (!allStatuses.length) { c.innerHTML = '<div style="color:var(--muted)">Aucun statut.</div>'; return; }
+  c.innerHTML = allStatuses.map(s => `
+    <div class="status-list-item">
+      <div class="status-list-color" style="background:${s.color}"></div>
+      <span class="status-list-name">${esc(s.name)}</span>
+      ${s.isDefault ? '<span class="status-list-badge">défaut</span>' : ''}
+      ${!s.isDefault ? `<button class="status-delete-btn" onclick="deleteStatus('${s._id}')">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+async function createStatus() {
+  const name = document.getElementById('newStatusName').value.trim();
+  const color = document.getElementById('newStatusColor').value;
+  if (!name) return;
+  const r = await fetch('/api/statuses', {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, color }),
+  });
+  if (!r.ok) return;
+  const data = await r.json();
+  allStatuses.push(data.status);
+  closeModal('modalNewStatus');
+  renderStatusesPage();
+}
+
+async function deleteStatus(statusId) {
+  if (!confirm('Supprimer ce statut ?')) return;
+  const r = await fetch(`/api/statuses/${statusId}`, { method:'DELETE', credentials:'include' });
+  if (!r.ok) return;
+  allStatuses = allStatuses.filter(s => s._id !== statusId);
+  renderStatusesPage();
+}
+
+// ════════════════════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════════════════════
+async function startSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { showError('Veuillez saisir une recherche'); return; }
+  setLoading(true); hideError();
+  document.getElementById('searchResultsSection').classList.remove('active');
+  currentSearchResults = [];
+  try {
+    updateLoaderStatus('Génération des variantes de recherche...');
+    await wait(300);
+    updateLoaderStatus('Appels API Google Places en cours...');
+    const start = Date.now();
+    const res = await fetch(`/search?q=${encodeURIComponent(q)}`, { credentials:'include' });
+    const elapsed = ((Date.now()-start)/1000).toFixed(1);
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error||`Erreur ${res.status}`); }
+    const data = await res.json();
+    currentSearchResults = data.results || [];
+    currentSearchQuery = q;
+    updateLoaderStatus(`✅ ${currentSearchResults.length} résultats en ${elapsed}s`);
+    await wait(400);
+    renderSearchResults(currentSearchResults, q);
+  } catch(err) { showError(err.message); }
+  finally { setLoading(false); }
+}
+
+function setLoading(state) {
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = state;
+  document.getElementById('btnIcon').textContent = state ? '⏳' : '⚡';
+  document.getElementById('btnText').textContent = state ? 'En cours...' : 'Rechercher';
+  document.getElementById('loader').classList.toggle('active', state);
+  document.getElementById('statusDot')?.classList.toggle('idle', !state);
+}
+
+function updateLoaderStatus(t) { document.getElementById('loaderStatus').textContent = t; }
+
+function renderSearchResults(data, query) {
+  document.getElementById('searchResultsSection').classList.add('active');
+  document.getElementById('resultCount').textContent = data.length;
+  document.getElementById('saveListBtn').disabled = !data.length;
+  document.getElementById('exportBtn').disabled = !data.length;
+  document.getElementById('statusText').textContent = data.length ? 'Résultats' : 'Aucun résultat';
+  document.getElementById('queryPill').style.display = 'flex';
+  document.getElementById('queryLabel').textContent = `"${query}"`;
+  const tbody = document.getElementById('tableBody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Aucun résultat</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map((l,i) => `
+    <tr>
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2)">${i+1}</td>
+      <td class="td-name">${esc(l.name)}</td>
+      <td class="td-addr">${esc(l.address)||'<span class="no-data">—</span>'}</td>
+      <td>${l.phone?`<a class="phone-link" href="tel:${esc(l.phone)}">${esc(l.phone)}</a>`:'<span class="no-data">—</span>'}</td>
+      <td>${l.website?`<a class="site-link" href="${esc(l.website)}" target="_blank" rel="noopener">${shortUrl(l.website)}</a>`:'<span class="no-data">—</span>'}</td>
+      <td>${l.rating?`<div class="stars"><span class="star-val">★ ${l.rating}</span><span class="star-count">(${l.reviews})</span></div>`:'<span class="no-data">—</span>'}</td>
+      <td><a class="maps-link" href="${esc(l.google_maps_url)}" target="_blank" rel="noopener">Maps ↗</a></td>
+    </tr>
+  `).join('');
+}
+
+function exportCSV() {
+  if (!currentSearchResults.length) return;
+  const h = ['Nom','Adresse','Téléphone','Site web','Note','Avis','Google Maps'];
+  const rows = currentSearchResults.map(l => [l.name,l.address,l.phone,l.website,l.rating,l.reviews,l.google_maps_url].map(csvCell));
+  downloadCSV([h.join(';'),...rows.map(r=>r.join(';'))].join('\n'), `leads_${Date.now()}.csv`);
+}
+
+// ════════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════════
+function openSaveListModal() {
+  document.getElementById('newListName').value = currentSearchQuery ? `Leads - ${currentSearchQuery}` : '';
+  openModal('modalSaveList');
+  setTimeout(() => document.getElementById('newListName').select(), 50);
+}
+function openNewListModal() { document.getElementById('emptyListName').value = ''; openModal('modalNewList'); }
+function openNewStatusModal() { document.getElementById('newStatusName').value = ''; document.getElementById('newStatusColor').value = '#a3e635'; openModal('modalNewStatus'); }
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('active'); }));
+
+// ════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════
+async function doLogout() {
+  await fetch('/api/auth/logout', { method:'POST', credentials:'include' });
+  window.location.href = '/auth';
+}
+
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+function showError(msg) { document.getElementById('errorText').textContent=msg; document.getElementById('errorBox').classList.add('active'); }
+function hideError() { document.getElementById('errorBox').classList.remove('active'); }
+function setExample(t) { document.getElementById('searchInput').value=t; document.getElementById('searchInput').focus(); }
+function copyPhone(p) { navigator.clipboard.writeText(p).then(()=>showToast('✅ Numéro copié !')); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function shortUrl(u) { try{return new URL(u).hostname.replace('www.','')}catch{return u} }
+function csvCell(v) { const s=String(v||'').replace(/"/g,'""'); return /[;",\n]/.test(s)?`"${s}"`:s; }
+function wait(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function hexToRgba(hex,a) {
+  if(!hex||hex.length<7) return `rgba(163,230,53,${a})`;
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function downloadCSV(csv, filename) {
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function showToast(msg) {
+  const t = document.getElementById('copyToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') startSearch(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadGen Maps — Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060908;
+      --surface: #0d1210;
+      --surface2: #111a12;
+      --border: #1d2b1e;
+      --border2: #263328;
+      --accent: #a3ff47;
+      --accent-hover: #bcff6e;
+      --accent-glow: rgba(163,255,71,0.12);
+      --text: #eef5ee;
+      --text2: #7a9b7d;
+      --text3: #4d6b50;
+      --red: #ff4545;
+      --red-dim: rgba(255,69,69,0.1);
+      --red-border: rgba(255,69,69,0.25);
+      --green: #34d058;
+      --green-dim: rgba(52,208,88,0.1);
+      --green-border: rgba(52,208,88,0.25);
+      --radius: 6px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30vh;
+      left: -20vw;
+      width: 80vw;
+      height: 80vh;
+      background: radial-gradient(ellipse at center, rgba(163,255,71,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+    .logo-pin {
+      width: 36px;
+      height: 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .logo-name {
+      font-family: 'Geologica', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .logo-name span { color: var(--accent); }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      z-index: 1;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(163,255,71,0.25), transparent);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.15s;
+      position: relative;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Fields */
+    .field { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 6px;
+    }
+    input[type=email],
+    input[type=password],
+    input[type=text] {
+      width: 100%;
+      padding: 11px 13px;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    input::placeholder { color: var(--text3); }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #060908;
+      font-weight: 700;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 16px rgba(163,255,71,0.18);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 24px rgba(163,255,71,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-google {
+      background: var(--bg);
+      color: var(--text2);
+      border: 1px solid var(--border2);
+      font-weight: 500;
+    }
+    .btn-google:hover {
+      border-color: rgba(163,255,71,0.3);
+      color: var(--text);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 0;
+      color: var(--text3);
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Messages */
+    .error-box, .success-box, .oauth-error {
+      display: none;
+      padding: 11px 13px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .error-box.show, .oauth-error.show { display: block; }
+    .success-box.show { display: block; }
+    .error-box, .oauth-error {
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      color: #ff8f8f;
+    }
+    .success-box {
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      color: #6dffb0;
+    }
+
+    /* Google icon (inline G) */
+    .google-g {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <a class="logo" href="/">
+    <div class="logo-pin">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(163,255,71,0.15)" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="12" cy="9" r="2.5" fill="currentColor"/>
+      </svg>
+    </div>
+    <span class="logo-name">Lead<span>Gen</span></span>
+  </a>
+
+  <div class="card">
+    <div id="oauthError" class="oauth-error"></div>
+
+    <div class="tabs">
+      <button class="tab" id="tabLogin" onclick="switchTab('login')">Connexion</button>
+      <button class="tab" id="tabRegister" onclick="switchTab('register')">Inscription</button>
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+    <div id="successBox" class="success-box"></div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="vous@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+        <span id="loginBtnText">Se connecter</span>
+      </button>
+      <div class="divider">ou</div>
+      <button class="btn btn-google" onclick="doGoogleAuth()">
+        <span class="google-g">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        </span>
+        Continuer avec Google
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="registerForm" style="display:none">
+      <div class="field">
+        <label>Nom (optionnel)</label>
+        <input type="text" id="registerName" placeholder="Votre nom" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="registerEmail" placeholder="vous@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="registerPassword" placeholder="Min. 6 caractères" autocomplete="new-password" />
+      </div>
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">
+        <span id="registerBtnText">Créer mon compte</span>
+      </button>
+      <div class="divider">ou</div>
+      <button class="btn btn-google" onclick="doGoogleAuth()">
+        <span class="google-g">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        </span>
+        Continuer avec Google
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Check if already logged in
+    (async () => {
+      try {
+        const r = await fetch('/api/auth/me');
+        if (r.ok) window.location.href = '/dashboard';
+      } catch {}
+    })();
+
+    // Check for OAuth error in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'oauth_failed') {
+      const el = document.getElementById('oauthError');
+      el.textContent = 'La connexion Google a échoué. Veuillez réessayer.';
+      el.classList.add('show');
+    }
+
+    // Mode from URL (?mode=register)
+    const mode = urlParams.get('mode');
+    if (mode === 'register') switchTab('register');
+    else switchTab('login');
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      hideMessages();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('successBox').classList.remove('show');
+    }
+    function showSuccess(msg) {
+      const el = document.getElementById('successBox');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('errorBox').classList.remove('show');
+    }
+    function hideMessages() {
+      document.getElementById('errorBox').classList.remove('show');
+      document.getElementById('successBox').classList.remove('show');
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) return showError('Remplissez tous les champs');
+
+      const btn = document.getElementById('loginBtn');
+      const txt = document.getElementById('loginBtnText');
+      btn.disabled = true; txt.textContent = 'Connexion...';
+
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await r.json();
+        if (!r.ok) return showError(data.error || 'Erreur de connexion');
+        window.location.href = '/dashboard';
+      } catch {
+        showError('Erreur réseau, réessayez');
+      } finally {
+        btn.disabled = false; txt.textContent = 'Se connecter';
+      }
+    }
+
+    async function doRegister() {
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!email || !password) return showError('Email et mot de passe requis');
+
+      const btn = document.getElementById('registerBtn');
+      const txt = document.getElementById('registerBtnText');
+      btn.disabled = true; txt.textContent = 'Création...';
+
+      try {
+        const r = await fetch('/api/auth/register', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name }),
+        });
+        const data = await r.json();
+        if (!r.ok) return showError(data.error || 'Erreur lors de l\'inscription');
+        window.location.href = '/dashboard';
+      } catch {
+        showError('Erreur réseau, réessayez');
+      } finally {
+        btn.disabled = false; txt.textContent = 'Créer mon compte';
+      }
+    }
+
+    function doGoogleAuth() {
+      window.location.href = '/api/auth/google';
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const loginVisible = document.getElementById('loginForm').style.display !== 'none';
+      if (loginVisible) doLogin(); else doRegister();
+    });
+  </script>
+</body>
+</html>

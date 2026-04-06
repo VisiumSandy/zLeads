@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py \"C:\\\\Users\\\\sandax\\\\.claude\\\\plugins\\\\marketplaces\\\\ui-ux-pro-max-skill\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"B2B SaaS CRM prospection leads minimal clean\" --design-system -p \"LeadGen\" -f markdown)",
+      "Bash(py \"C:\\\\Users\\\\sandax\\\\.claude\\\\plugins\\\\marketplaces\\\\ui-ux-pro-max-skill\\\\cli\\\\assets\\\\scripts\\\\search.py\" \"B2B SaaS CRM prospection leads minimal clean lime\" --design-system -p \"LeadGen\" -f markdown)",
+      "Bash(rtk ls:*)",
+      "Bash(py:*)"
+    ]
+  }
+}
