@@ -259,6 +259,7 @@
     /* ── TOAST ── */
     #copyToast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:9px 16px;font-size:13px;color:var(--accent);z-index:999;opacity:0;transition:all 0.22s ease;pointer-events:none;font-family:'Outfit',sans-serif;font-weight:500}
     #copyToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    #copyToast.error{color:#ef4444;border-color:#ef4444}
 
     #searchResultsSection{display:none}
     #searchResultsSection.active{display:block}
@@ -878,7 +879,7 @@ function renderListTable() {
       <td>
         <select class="status-select" onchange="changeLeadStatus('${lead._id}', this.value)" style="border-left:3px solid ${status ? status.color : 'var(--border)'}">
           <option value="">— Statut —</option>
-          ${allStatuses.map(s => `<option value="${s._id}" ${status&&status._id===s._id?'selected':''}>${s.name}</option>`).join('')}
+          ${allStatuses.map(s => `<option value="${s._id}" ${status&&status._id.toString()===s._id.toString()?'selected':''}>${s.name}</option>`).join('')}
         </select>
       </td>
       <td>
@@ -916,7 +917,11 @@ async function changeLeadStatus(leadId, statusId) {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ statusId: statusId || null }),
   });
-  if (!r.ok) return;
+  if (!r.ok) {
+    showToast('Erreur lors de la sauvegarde du statut', 'error');
+    renderListTable();
+    return;
+  }
   const data = await r.json();
   updateLeadInState(data.lead);
   renderListTable();
@@ -1348,10 +1353,12 @@ function downloadCSV(csv, filename) {
   const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
   URL.revokeObjectURL(url);
 }
-function showToast(msg) {
+function showToast(msg, type) {
   const t = document.getElementById('copyToast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+  t.textContent=msg;
+  t.classList.toggle('error', type==='error');
+  t.classList.add('show');
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.remove('error'); },2500);
 }
 document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') startSearch(); });
 </script>

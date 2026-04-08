@@ -47,6 +47,10 @@ router.post('/', async (req, res) => {
 
     // Insère les leads si fournis
     if (leads.length > 0) {
+      // Trouve le statut "À contacter" (order 0, isDefault) pour l'utilisateur
+      const Status = require('../models/Status');
+      const defaultStatus = await Status.findOne({ userId: req.user._id, isDefault: true, order: 0 });
+
       const leadDocs = leads.map((l) => ({
         listId: list._id,
         userId: req.user._id,
@@ -58,6 +62,7 @@ router.post('/', async (req, res) => {
         reviews: l.reviews || 0,
         googleMapsUrl: l.google_maps_url || l.googleMapsUrl || '',
         placeId: l.place_id || l.placeId || '',
+        statusId: defaultStatus ? defaultStatus._id : null,
       }));
 
       await Lead.insertMany(leadDocs);
